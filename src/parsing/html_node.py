@@ -90,7 +90,7 @@ class Text:
             for sub_text in self.content:
                 curr_length = len(sub_text)
                 curr_length_limit = length_limit_head if head_count == -1 or split_count < head_count \
-                    else length_limit_tail
+                        else length_limit_tail
                 if length + curr_length >= curr_length_limit and result:
                     stripped = result.strip()
                     result = ''
@@ -98,7 +98,7 @@ class Text:
                     if stripped:
                         split_count += 1
                         curr_length_limit = length_limit_head if head_count == -1 or split_count < head_count \
-                            else length_limit_tail
+                                else length_limit_tail
                         split_list.append(stripped)  # split
                 if curr_length >= curr_length_limit:
                     for subSubText in sub_text.split_html(curr_length_limit):
@@ -109,10 +109,9 @@ class Text:
                 result += sub_text.get_html()
 
             curr_length_limit = length_limit_head if head_count == -1 or split_count < head_count \
-                else length_limit_tail
+                    else length_limit_tail
             if length < curr_length_limit and result:
-                stripped = result.strip()
-                if stripped:
+                if stripped := result.strip():
                     split_list.append(stripped)  # split
             elif curr_length >= curr_length_limit and sub_text:
                 split_list.extend(sub_text.split_html(curr_length_limit))  # split
@@ -140,13 +139,11 @@ class Text:
             if shallow:
                 return [subText for subText in self.content if isinstance(subText, _class)]
             for subText in self.content:
-                instance = subText.find_instances(_class)
-                if instance:
+                if instance := subText.find_instances(_class):
                     result.extend(instance)
             return result or None
         if self.is_nested():
-            instance = self.content.find_instances(_class, shallow)
-            if instance:
+            if instance := self.content.find_instances(_class, shallow):
                 result.extend(instance)
         return result or None
 

@@ -285,7 +285,7 @@ async def feed_get(url: str, timeout: Optional[float] = None, web_semaphore: Uni
     log_level = log.WARNING if verbose else log.DEBUG
     _headers = {}
     if headers:
-        _headers.update(headers)
+        _headers |= headers
     if 'Accept' not in _headers:
         _headers['Accept'] = FEED_ACCEPT
 

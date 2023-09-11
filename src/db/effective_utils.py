@@ -252,8 +252,7 @@ class EffectiveTasks:
         """
         tasks_to_run = set()
         for effective_tasks in cls.__task_buckets.values():
-            tasks = effective_tasks.__get_tasks()
-            if tasks:
+            if tasks := effective_tasks.__get_tasks():
                 tasks_to_run.update(tasks)
 
         return tasks_to_run

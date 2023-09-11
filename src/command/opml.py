@@ -94,8 +94,9 @@ async def opml_import(event: Union[events.NewMessage.Event, Message],
     logger.info(f'Imported feed(s) for {chat_id}')
     msg = await send_success_and_failure_msg(reply, **import_result, lang=lang, edit=True)
 
-    subs = tuple(sub_d['sub'] for sub_d in import_result['sub_d_l'] if sub_d['sub'])
-    if subs:
+    if subs := tuple(
+        sub_d['sub'] for sub_d in import_result['sub_d_l'] if sub_d['sub']
+    ):
         if not sum(sub.title is not None for sub in subs):
             return  # no subscription set custom title
         sub_ids: list[int] = sorted(sub.id for sub in subs if sub.id)

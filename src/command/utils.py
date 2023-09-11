@@ -215,11 +215,11 @@ def command_gatekeeper(func: Optional[Callable] = None,
 
     @wraps(func)
     async def wrapper(event: Union[events.NewMessage.Event, Message,
-                                   events.CallbackQuery.Event,
-                                   events.InlineQuery.Event,
-                                   events.ChatAction.Event],
-                      # Note: `events.ChatAction.Event` only have ChatGetter, do not have SenderGetter like others
-                      *args, **kwargs):
+                                       events.CallbackQuery.Event,
+                                       events.InlineQuery.Event,
+                                       events.ChatAction.Event],
+                          # Note: `events.ChatAction.Event` only have ChatGetter, do not have SenderGetter like others
+                          *args, **kwargs):
         # placeholders
         lang = None
         command: Optional[str] = None
@@ -512,13 +512,21 @@ def command_gatekeeper(func: Optional[Callable] = None,
             raise e
         except Exception as e:
             logger.error(
-                f'Uncaught error occurred when {sender_fullname} '
-                + f'({sender_id}'
-                + (f', {participant_type}' if participant_type else '')
-                + f') '
-                + f'attempting to use {command}'
-                + (f' in {chat_title} ({chat_id})' if chat_id != sender_id else ''),
-                exc_info=e
+                (
+                    (
+                        f'Uncaught error occurred when {sender_fullname} '
+                        + f'({sender_id}'
+                        + (f', {participant_type}' if participant_type else '')
+                        + ') '
+                    )
+                    + f'attempting to use {command}'
+                )
+                + (
+                    f' in {chat_title} ({chat_id})'
+                    if chat_id != sender_id
+                    else ''
+                ),
+                exc_info=e,
             )
             try:
                 if isinstance(e, (FloodError, locks.ContextTimeoutError)):
@@ -637,9 +645,9 @@ class GroupMigratedAction(events.ChatAction):
         if (isinstance(update, (
                 types.UpdateNewMessage, types.UpdateNewChannelMessage))
                 and isinstance(update.message, types.MessageService)):
-            msg = update.message
             action = update.message.action
             if isinstance(action, types.MessageActionChannelMigrateFrom):
+                msg = update.message
                 return cls.Event(msg)
 
 

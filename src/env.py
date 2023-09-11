@@ -110,10 +110,9 @@ if _version == 'dirty':
             __git.wait(3)
             _version = __git.stdout.read().decode().strip()
         with Popen(['git', 'branch', '--show-current'],
-                   shell=False, stdout=PIPE, stderr=DEVNULL, bufsize=-1) as __git:
+                           shell=False, stdout=PIPE, stderr=DEVNULL, bufsize=-1) as __git:
             __git.wait(3)
-            __git = __git.stdout.read().decode().strip()
-            if __git:
+            if __git := __git.stdout.read().decode().strip():
                 _version += f'@{__git}'
     except Exception:
         _version = 'dirty'
@@ -183,8 +182,7 @@ DEFAULT_PROXY: Final = os.environ.get('SOCKS_PROXY') or os.environ.get('socks_pr
                        or os.environ.get('HTTP_PROXY') or os.environ.get('http_proxy') \
                        or os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
 
-TELEGRAM_PROXY: Final = os.environ.get('T_PROXY') or DEFAULT_PROXY
-if TELEGRAM_PROXY:
+if TELEGRAM_PROXY := os.environ.get('T_PROXY') or DEFAULT_PROXY:
     _parsed = parse_proxy_url(TELEGRAM_PROXY.replace('socks5h', 'socks5'))
     TELEGRAM_PROXY_DICT: Final = {
         'proxy_type': _parsed[0],

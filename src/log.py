@@ -100,17 +100,13 @@ class _APSCFilter(logging.Filter):
             self.count = 0
             self.watchdog.fine()
             return False
-        if 'Running job "run_monitor_task' in msg:
-            return False
-        return True
+        return 'Running job "run_monitor_task' not in msg
 
 
 class _AiohttpAccessFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         msg = record.msg % record.args
-        if record.levelno <= logging.INFO and 'Mozilla' not in msg:
-            return False
-        return True
+        return record.levelno > logging.INFO or 'Mozilla' in msg
 
 
 class _TelethonClientUpdatesFilter(logging.Filter):

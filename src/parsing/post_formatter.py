@@ -148,7 +148,7 @@ class PostFormatter:
         tags = tags or []
 
         param_hash = f'{sub_title}|{tags}|{send_mode}|{length_limit}|{link_preview}|' \
-                     f'{display_author}|{display_via}|{display_title}|{display_media}|{style}'
+                         f'{display_author}|{display_via}|{display_title}|{display_media}|{style}'
 
         if param_hash in self.__param_to_option_cache:
             option_hash = self.__param_to_option_cache[param_hash]
@@ -162,7 +162,7 @@ class PostFormatter:
                     await self.parse_html()
 
         # ---- determine via_type ----
-        if display_via == COMPLETELY_DISABLE or not (sub_title or self.link):
+        if display_via == COMPLETELY_DISABLE or not sub_title and not self.link:
             via_type = NO_VIA
         elif display_via == NO_FEED_TITLE_BUT_BARE_LINK and self.link:
             via_type = BARE_LINK_VIA
@@ -174,7 +174,7 @@ class PostFormatter:
             via_type = NO_VIA
         elif display_via == FEED_TITLE_AND_LINK and sub_title:
             via_type = FEED_TITLE_VIA_W_LINK
-        elif display_via == FEED_TITLE_AND_LINK and not sub_title and self.link:
+        elif display_via == FEED_TITLE_AND_LINK:
             via_type = TEXT_LINK_VIA
         else:
             via_type = NO_VIA
@@ -185,9 +185,11 @@ class PostFormatter:
                 if self.__title_similarity is None:  # double check
                     plain_text = utils.stripAnySpace(self.html_tree.get_html(plain=True))
                     title_tbc = self.title.replace('[图片]', '').replace('[视频]', '').replace('发布了: ', '') \
-                        .strip().rstrip('.…')
+                            .strip().rstrip('.…')
                     title_tbc = utils.stripAnySpace(title_tbc)
-                    self.__title_similarity = fuzz.partial_ratio(title_tbc, plain_text[0:len(self.title) + 10])
+                    self.__title_similarity = fuzz.partial_ratio(
+                        title_tbc, plain_text[: len(self.title) + 10]
+                    )
                     logger.debug(f'{self.title} ({self.link}) '
                                  f'is {self.__title_similarity:0.2f}% likely to be of no title.')
 
@@ -202,23 +204,24 @@ class PostFormatter:
             title_type = NO_POST_TITLE
 
         # ---- determine need_author ----
-        need_author = display_author != DISABLE and self.author and (
+        need_author = (
+            display_author != DISABLE
+            and self.author
+            and (
                 display_author == FORCE_DISPLAY
-                or (
-                        display_author == AUTO
-                        and (
-                                not (self.author and sub_title and self.author in sub_title)
-                                or via_type not in (FEED_TITLE_VIA_NO_LINK and FEED_TITLE_VIA_W_LINK)
-                        )
+                or display_author == AUTO
+                and (
+                    not self.author
+                    or not sub_title
+                    or self.author not in sub_title
+                    or via_type
+                    not in (FEED_TITLE_VIA_NO_LINK and FEED_TITLE_VIA_W_LINK)
                 )
+            )
         )
 
         # ---- determine message_style ----
-        if style == FLOWERSS:
-            message_style = FLOWERSS_STYLE
-        else:  # RSSTT
-            message_style = NORMAL_STYLE
-
+        message_style = FLOWERSS_STYLE if style == FLOWERSS else NORMAL_STYLE
         # ---- determine message_type ----
         normal_msg_post = None
         if send_mode == FORCE_MESSAGE:
@@ -227,7 +230,7 @@ class PostFormatter:
             message_type = LINK_MESSAGE
         elif send_mode == FORCE_TELEGRAPH and self.telegraph_link is not False:
             message_type = TELEGRAPH_MESSAGE
-        elif send_mode == FORCE_TELEGRAPH and self.telegraph_link is False:
+        elif send_mode == FORCE_TELEGRAPH:
             if self.link:
                 message_type = LINK_MESSAGE
                 title_type = POST_TITLE_W_LINK
@@ -237,7 +240,7 @@ class PostFormatter:
             # if display_media != DISABLE and self.media:
             #     await self.media.validate()  # check media validity
             media_msg_count = await self.media.estimate_message_counts() \
-                if (display_media != DISABLE and self.media) else 0
+                    if (display_media != DISABLE and self.media) else 0
             normal_msg_post = self.generate_formatted_post(sub_title=sub_title,
                                                            tags=tags,
                                                            title_type=title_type,
@@ -393,7 +396,9 @@ class PostFormatter:
         title = self.title or 'Untitled'
 
         # ---- hashtags ----
-        tags_html = Text(' '.join('#' + tag for tag in tags)).get_html() if tags else None
+        tags_html = (
+            Text(' '.join(f'#{tag}' for tag in tags)).get_html() if tags else None
+        )
 
         # ---- author ----
         author_html = Text(f'(author: {self.author})').get_html() if need_author and self.author else None
@@ -531,9 +536,8 @@ class PostFormatter:
                 if not utils.isAbsoluteHttpLink(enclosure.url):
                     if parsed.parser.soup.findAll('a', href=enclosure.url):
                         continue  # the link is not an HTTP link and is already appearing in the post
-                    else:
-                        medium = File(enclosure.url)
-                        medium.valid = False
+                    medium = File(enclosure.url)
+                    medium.valid = False
                 elif not enclosure.type:
                     medium = File(enclosure.url)
                 elif any(keyword in enclosure.type for keyword in ('webp', 'svg')):

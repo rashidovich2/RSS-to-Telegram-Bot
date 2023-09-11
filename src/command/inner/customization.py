@@ -460,8 +460,7 @@ async def set_sub_hashtags(sub: db.Sub, hashtags: Union[Iterable[str], str, None
     else:
         filtered_hashtags = []
         for hashtag in hashtags:
-            hashtag = hashtag.strip(' \n\r\t#')
-            if hashtag:
+            if hashtag := hashtag.strip(' \n\r\t#'):
                 filtered_hashtags.append(hashtag)
         hashtags_str = ' '.join(filtered_hashtags) if filtered_hashtags else None
     if sub.tags == hashtags_str:
